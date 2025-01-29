@@ -22,17 +22,30 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 
 import http.client
-from typing import Dict
+from typing import Optional, Dict
 from typing import Union
+import warnings
 
 from google.rpc import error_details_pb2
 
+
+def _warn_could_not_import_grpcio_status():
+    warnings.warn(
+        "Please install grpcio-status to obtain helpful grpc error messages.",
+        ImportWarning,
+    )  # pragma: NO COVER
+
+
 try:
     import grpc
-    from grpc_status import rpc_status
+
+    try:
+        from grpc_status import rpc_status
+    except ImportError:  # pragma: NO COVER
+        _warn_could_not_import_grpcio_status()
+        rpc_status = None
 except ImportError:  # pragma: NO COVER
     grpc = None
-    rpc_status = None
 
 # Lookup tables for mapping exceptions from HTTP and gRPC transports.
 # Populated by _GoogleAPICallErrorMeta
@@ -65,7 +78,7 @@ class RetryError(GoogleAPIError):
 
     Args:
         message (str): The exception message.
-        cause (Exception): The last exception raised when retring the
+        cause (Exception): The last exception raised when retrying the
             function.
     """
 
@@ -104,6 +117,8 @@ class GoogleAPICallError(GoogleAPIError, metaclass=_GoogleAPICallErrorMeta):
         details (Sequence[Any]): An optional list of objects defined in google.rpc.error_details.
         response (Union[requests.Request, grpc.Call]): The response or
             gRPC call metadata.
+        error_info (Union[error_details_pb2.ErrorInfo, None]): An optional object containing error info
+            (google.rpc.error_details.ErrorInfo).
     """
 
     code: Union[int, None] = None
@@ -122,19 +137,67 @@ class GoogleAPICallError(GoogleAPIError, metaclass=_GoogleAPICallErrorMeta):
     This may be ``None`` if the exception does not match up to a gRPC error.
     """
 
-    def __init__(self, message, errors=(), details=(), response=None):
+    def __init__(self, message, errors=(), details=(), response=None, error_info=None):
         super(GoogleAPICallError, self).__init__(message)
         self.message = message
         """str: The exception message."""
         self._errors = errors
         self._details = details
         self._response = response
+        self._error_info = error_info
 
     def __str__(self):
+        error_msg = "{} {}".format(self.code, self.message)
         if self.details:
-            return "{} {} {}".format(self.code, self.message, self.details)
+            error_msg = "{} {}".format(error_msg, self.details)
+        # Note: This else condition can be removed once proposal A from
+        # b/284179390 is implemented.
         else:
-            return "{} {}".format(self.code, self.message)
+            if self.errors:
+                errors = [
+                    f"{error.code}: {error.message}"
+                    for error in self.errors
+                    if hasattr(error, "code") and hasattr(error, "message")
+                ]
+                if errors:
+                    error_msg = "{} {}".format(error_msg, "\n".join(errors))
+        return error_msg
+
+    @property
+    def reason(self):
+        """The reason of the error.
+
+        Reference:
+            https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto#L112
+
+        Returns:
+            Union[str, None]: An optional string containing reason of the error.
+        """
+        return self._error_info.reason if self._error_info else None
+
+    @property
+    def domain(self):
+        """The logical grouping to which the "reason" belongs.
+
+        Reference:
+            https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto#L112
+
+        Returns:
+            Union[str, None]: An optional string containing a logical grouping to which the "reason" belongs.
+        """
+        return self._error_info.domain if self._error_info else None
+
+    @property
+    def metadata(self):
+        """Additional structured details about this error.
+
+        Reference:
+            https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto#L112
+
+        Returns:
+            Union[Dict[str, str], None]: An optional object containing structured details about the error.
+        """
+        return self._error_info.metadata if self._error_info else None
 
     @property
     def errors(self):
@@ -155,7 +218,7 @@ class GoogleAPICallError(GoogleAPIError, metaclass=_GoogleAPICallErrorMeta):
 
         Returns:
             Sequence[Any]: A list of structured objects from error_details.proto
-       """
+        """
         return list(self._details)
 
     @property
@@ -379,6 +442,12 @@ class DeadlineExceeded(GatewayTimeout):
     grpc_status_code = grpc.StatusCode.DEADLINE_EXCEEDED if grpc is not None else None
 
 
+class AsyncRestUnsupportedParameterError(NotImplementedError):
+    """Raised when an unsupported parameter is configured against async rest transport."""
+
+    pass
+
+
 def exception_class_for_http_status(status_code):
     """Return the exception class for a specific HTTP status code.
 
@@ -413,6 +482,62 @@ def from_http_status(status_code, message, **kwargs):
     return error
 
 
+def _format_rest_error_message(error, method, url):
+    method = method.upper() if method else None
+    message = "{method} {url}: {error}".format(
+        method=method,
+        url=url,
+        error=error,
+    )
+    return message
+
+
+# NOTE: We're moving away from `from_http_status` because it expects an aiohttp response compared
+# to `format_http_response_error` which expects a more abstract response from google.auth and is
+# compatible with both sync and async response types.
+# TODO(https://github.com/googleapis/python-api-core/issues/691): Add type hint for response.
+def format_http_response_error(
+    response, method: str, url: str, payload: Optional[Dict] = None
+):
+    """Create a :class:`GoogleAPICallError` from a google auth rest response.
+
+    Args:
+        response Union[google.auth.transport.Response, google.auth.aio.transport.Response]: The HTTP response.
+        method Optional(str): The HTTP request method.
+        url Optional(str): The HTTP request url.
+        payload Optional(dict): The HTTP response payload. If not passed in, it is read from response for a response type of google.auth.transport.Response.
+
+    Returns:
+        GoogleAPICallError: An instance of the appropriate subclass of
+            :class:`GoogleAPICallError`, with the message and errors populated
+            from the response.
+    """
+    payload = {} if not payload else payload
+    error_message = payload.get("error", {}).get("message", "unknown error")
+    errors = payload.get("error", {}).get("errors", ())
+    # In JSON, details are already formatted in developer-friendly way.
+    details = payload.get("error", {}).get("details", ())
+    error_info_list = list(
+        filter(
+            lambda detail: detail.get("@type", "")
+            == "type.googleapis.com/google.rpc.ErrorInfo",
+            details,
+        )
+    )
+    error_info = error_info_list[0] if error_info_list else None
+    message = _format_rest_error_message(error_message, method, url)
+
+    exception = from_http_status(
+        response.status_code,
+        message,
+        errors=errors,
+        details=details,
+        response=response,
+        error_info=error_info,
+    )
+    return exception
+
+
 def from_http_response(response):
     """Create a :class:`GoogleAPICallError` from a :class:`requests.Response`.
 
@@ -428,20 +553,9 @@ def from_http_response(response):
         payload = response.json()
     except ValueError:
         payload = {"error": {"message": response.text or "unknown error"}}
-
-    error_message = payload.get("error", {}).get("message", "unknown error")
-    errors = payload.get("error", {}).get("errors", ())
-    # In JSON, details are already formatted in developer-friendly way.
-    details = payload.get("error", {}).get("details", ())
-
-    message = "{method} {url}: {error}".format(
-        method=response.request.method, url=response.request.url, error=error_message
+    return format_http_response_error(
+        response, response.request.method, response.request.url, payload
     )
-
-    exception = from_http_status(
-        response.status_code, message, errors=errors, details=details, response=response
-    )
-    return exception
 
 
 def exception_class_for_grpc_status(status_code):
@@ -487,13 +601,16 @@ def _is_informative_grpc_error(rpc_exc):
 
 
 def _parse_grpc_error_details(rpc_exc):
+    if not rpc_status:  # pragma: NO COVER
+        _warn_could_not_import_grpcio_status()
+        return [], None
     try:
         status = rpc_status.from_call(rpc_exc)
     except NotImplementedError:  # workaround
-        return []
+        return [], None
 
     if not status:
-        return []
+        return [], None
 
     possible_errors = [
         error_details_pb2.BadRequest,
@@ -507,6 +624,7 @@ def _parse_grpc_error_details(rpc_exc):
         error_details_pb2.Help,
         error_details_pb2.LocalizedMessage,
     ]
+    error_info = None
     error_details = []
     for detail in status.details:
         matched_detail_cls = list(
@@ -519,7 +637,9 @@ def _parse_grpc_error_details(rpc_exc):
             info = matched_detail_cls[0]()
             detail.Unpack(info)
         error_details.append(info)
-    return error_details
+        if isinstance(info, error_details_pb2.ErrorInfo):
+            error_info = info
+    return error_details, error_info
 
 
 def from_grpc_error(rpc_exc):
@@ -534,13 +654,17 @@ def from_grpc_error(rpc_exc):
     """
     # NOTE(lidiz) All gRPC error shares the parent class grpc.RpcError.
     # However, check for grpc.RpcError breaks backward compatibility.
-    if isinstance(rpc_exc, grpc.Call) or _is_informative_grpc_error(rpc_exc):
+    if (
+        grpc is not None and isinstance(rpc_exc, grpc.Call)
+    ) or _is_informative_grpc_error(rpc_exc):
+        details, err_info = _parse_grpc_error_details(rpc_exc)
         return from_grpc_status(
             rpc_exc.code(),
             rpc_exc.details(),
             errors=(rpc_exc,),
-            details=_parse_grpc_error_details(rpc_exc),
+            details=details,
             response=rpc_exc,
+            error_info=err_info,
         )
     else:
         return GoogleAPICallError(str(rpc_exc), errors=(rpc_exc,), response=rpc_exc)
