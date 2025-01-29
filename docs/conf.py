@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2021 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -314,7 +314,13 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (root_doc, "google-api-core", "google-api-core Documentation", [author], 1,)
+    (
+        root_doc,
+        "google-api-core",
+        "google-api-core Documentation",
+        [author],
+        1,
+    )
 ]
 
 # If true, show URL addresses after external links.
@@ -355,7 +361,10 @@ texinfo_documents = [
 intersphinx_mapping = {
     "python": ("https://python.readthedocs.org/en/latest/", None),
     "google-auth": ("https://googleapis.dev/python/google-auth/latest/", None),
-    "google.api_core": ("https://googleapis.dev/python/google-api-core/latest/", None,),
+    "google.api_core": (
+        "https://googleapis.dev/python/google-api-core/latest/",
+        None,
+    ),
     "grpc": ("https://grpc.github.io/grpc/python/", None),
     "proto-plus": ("https://proto-plus-python.readthedocs.io/en/latest/", None),
     "protobuf": ("https://googleapis.dev/python/protobuf/latest/", None),

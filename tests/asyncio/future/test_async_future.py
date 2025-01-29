@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import asyncio
+from unittest import mock
 
-import mock
 import pytest
 
 from google.api_core import exceptions
@@ -47,7 +47,6 @@ async def test_polling_future_constructor():
 @pytest.mark.asyncio
 async def test_set_result():
     future = AsyncFuture()
-    callback = mock.Mock()
 
     future.set_result(1)
 
