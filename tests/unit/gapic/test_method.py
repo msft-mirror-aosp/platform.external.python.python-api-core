@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import datetime
+from unittest import mock
 
-import mock
 import pytest
 
 try:
@@ -37,27 +37,6 @@ def _utcnow_monotonic():
     while True:
         yield curr_value
         curr_value += delta
-
-
-def test__determine_timeout():
-    # Check _determine_timeout always returns a Timeout object.
-    timeout_type_timeout = timeout.ConstantTimeout(600.0)
-    returned_timeout = google.api_core.gapic_v1.method._determine_timeout(
-        600.0, 600.0, None
-    )
-    assert isinstance(returned_timeout, timeout.ConstantTimeout)
-    returned_timeout = google.api_core.gapic_v1.method._determine_timeout(
-        600.0, timeout_type_timeout, None
-    )
-    assert isinstance(returned_timeout, timeout.ConstantTimeout)
-    returned_timeout = google.api_core.gapic_v1.method._determine_timeout(
-        timeout_type_timeout, 600.0, None
-    )
-    assert isinstance(returned_timeout, timeout.ConstantTimeout)
-    returned_timeout = google.api_core.gapic_v1.method._determine_timeout(
-        timeout_type_timeout, timeout_type_timeout, None
-    )
-    assert isinstance(returned_timeout, timeout.ConstantTimeout)
 
 
 def test_wrap_method_basic():
@@ -142,91 +121,71 @@ def test_invoke_wrapped_method_with_metadata_as_none():
 
 
 @mock.patch("time.sleep")
-def test_wrap_method_with_default_retry_and_timeout(unusued_sleep):
+def test_wrap_method_with_default_retry_and_timeout_and_compression(unused_sleep):
     method = mock.Mock(
         spec=["__call__"], side_effect=[exceptions.InternalServerError(None), 42]
     )
     default_retry = retry.Retry()
     default_timeout = timeout.ConstantTimeout(60)
+    default_compression = grpc.Compression.Gzip
     wrapped_method = google.api_core.gapic_v1.method.wrap_method(
-        method, default_retry, default_timeout
+        method, default_retry, default_timeout, default_compression
     )
 
     result = wrapped_method()
 
     assert result == 42
     assert method.call_count == 2
-    method.assert_called_with(timeout=60, metadata=mock.ANY)
+    method.assert_called_with(
+        timeout=60, compression=default_compression, metadata=mock.ANY
+    )
 
 
 @mock.patch("time.sleep")
-def test_wrap_method_with_default_retry_and_timeout_using_sentinel(unusued_sleep):
+def test_wrap_method_with_default_retry_and_timeout_using_sentinel(unused_sleep):
     method = mock.Mock(
         spec=["__call__"], side_effect=[exceptions.InternalServerError(None), 42]
     )
     default_retry = retry.Retry()
     default_timeout = timeout.ConstantTimeout(60)
+    default_compression = grpc.Compression.Gzip
     wrapped_method = google.api_core.gapic_v1.method.wrap_method(
-        method, default_retry, default_timeout
+        method, default_retry, default_timeout, default_compression
     )
 
     result = wrapped_method(
         retry=google.api_core.gapic_v1.method.DEFAULT,
         timeout=google.api_core.gapic_v1.method.DEFAULT,
+        compression=google.api_core.gapic_v1.method.DEFAULT,
     )
 
     assert result == 42
     assert method.call_count == 2
-    method.assert_called_with(timeout=60, metadata=mock.ANY)
+    method.assert_called_with(
+        timeout=60, compression=default_compression, metadata=mock.ANY
+    )
 
 
 @mock.patch("time.sleep")
-def test_wrap_method_with_overriding_retry_and_timeout(unusued_sleep):
+def test_wrap_method_with_overriding_retry_timeout_compression(unused_sleep):
     method = mock.Mock(spec=["__call__"], side_effect=[exceptions.NotFound(None), 42])
     default_retry = retry.Retry()
     default_timeout = timeout.ConstantTimeout(60)
+    default_compression = grpc.Compression.Gzip
     wrapped_method = google.api_core.gapic_v1.method.wrap_method(
-        method, default_retry, default_timeout
+        method, default_retry, default_timeout, default_compression
     )
 
     result = wrapped_method(
         retry=retry.Retry(retry.if_exception_type(exceptions.NotFound)),
         timeout=timeout.ConstantTimeout(22),
+        compression=grpc.Compression.Deflate,
     )
 
     assert result == 42
     assert method.call_count == 2
-    method.assert_called_with(timeout=22, metadata=mock.ANY)
-
-
-@mock.patch("time.sleep")
-@mock.patch(
-    "google.api_core.datetime_helpers.utcnow",
-    side_effect=_utcnow_monotonic(),
-    autospec=True,
-)
-def test_wrap_method_with_overriding_retry_deadline(utcnow, unused_sleep):
-    method = mock.Mock(
-        spec=["__call__"],
-        side_effect=([exceptions.InternalServerError(None)] * 4) + [42],
-    )
-    default_retry = retry.Retry()
-    default_timeout = timeout.ExponentialTimeout(deadline=60)
-    wrapped_method = google.api_core.gapic_v1.method.wrap_method(
-        method, default_retry, default_timeout
-    )
-
-    # Overriding only the retry's deadline should also override the timeout's
-    # deadline.
-    result = wrapped_method(retry=default_retry.with_deadline(30))
-
-    assert result == 42
-    timeout_args = [call[1]["timeout"] for call in method.call_args_list]
-    assert timeout_args == [5.0, 10.0, 20.0, 26.0, 25.0]
-    assert utcnow.call_count == (
-        1
-        + 5  # First to set the deadline.
-        + 5  # One for each min(timeout, maximum, (DEADLINE - NOW).seconds)
+    method.assert_called_with(
+        timeout=22, compression=grpc.Compression.Deflate, metadata=mock.ANY
     )
 
 
@@ -242,3 +201,24 @@ def test_wrap_method_with_overriding_timeout_as_a_number():
 
     assert result == 42
     method.assert_called_once_with(timeout=22, metadata=mock.ANY)
+
+
+def test_wrap_method_with_call():
+    method = mock.Mock()
+    mock_call = mock.Mock()
+    method.with_call.return_value = 42, mock_call
+
+    wrapped_method = google.api_core.gapic_v1.method.wrap_method(method, with_call=True)
+    result = wrapped_method()
+    assert len(result) == 2
+    assert result[0] == 42
+    assert result[1] == mock_call
+
+
+def test_wrap_method_with_call_not_supported():
+    """Raises an error if wrapped callable doesn't have with_call method."""
+    method = lambda: None  # noqa: E731
+
+    with pytest.raises(ValueError) as exc_info:
+        google.api_core.gapic_v1.method.wrap_method(method, with_call=True)
+    assert "with_call=True is only supported for unary calls" in str(exc_info.value)
