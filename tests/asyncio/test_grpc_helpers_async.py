@@ -12,17 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
+try:
+    from unittest import mock
+    from unittest.mock import AsyncMock  # pragma: NO COVER  # noqa: F401
+except ImportError:  # pragma: NO COVER
+    import mock  # type: ignore
 import pytest  # noqa: I202
 
 try:
     import grpc
     from grpc import aio
-except ImportError:
+except ImportError:  # pragma: NO COVER
     grpc = aio = None
 
 
-if grpc is None:
+if grpc is None:  # pragma: NO COVER
     pytest.skip("No GRPC", allow_module_level=True)
 
 
@@ -98,11 +102,39 @@ async def test_common_methods_in_wrapped_call():
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "callable_type,expected_wrapper_type",
+    [
+        (grpc.aio.UnaryStreamMultiCallable, grpc_helpers_async._WrappedUnaryStreamCall),
+        (grpc.aio.StreamUnaryMultiCallable, grpc_helpers_async._WrappedStreamUnaryCall),
+        (
+            grpc.aio.StreamStreamMultiCallable,
+            grpc_helpers_async._WrappedStreamStreamCall,
+        ),
+    ],
+)
+async def test_wrap_errors_w_stream_type(callable_type, expected_wrapper_type):
+    class ConcreteMulticallable(callable_type):
+        def __call__(self, *args, **kwargs):
+            raise NotImplementedError("Should not be called")
+
+    with mock.patch.object(
+        grpc_helpers_async, "_wrap_stream_errors"
+    ) as wrap_stream_errors:
+        callable_ = ConcreteMulticallable()
+        grpc_helpers_async.wrap_errors(callable_)
+        assert wrap_stream_errors.call_count == 1
+        wrap_stream_errors.assert_called_once_with(callable_, expected_wrapper_type)
+
+
+@pytest.mark.asyncio
 async def test_wrap_stream_errors_unary_stream():
     mock_call = mock.Mock(aio.UnaryStreamCall, autospec=True)
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedUnaryStreamCall
+    )
 
     await wrapped_callable(1, 2, three="four")
     multicallable.assert_called_once_with(1, 2, three="four")
@@ -114,7 +146,9 @@ async def test_wrap_stream_errors_stream_unary():
     mock_call = mock.Mock(aio.StreamUnaryCall, autospec=True)
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamUnaryCall
+    )
 
     await wrapped_callable(1, 2, three="four")
     multicallable.assert_called_once_with(1, 2, three="four")
@@ -126,22 +160,13 @@ async def test_wrap_stream_errors_stream_stream():
     mock_call = mock.Mock(aio.StreamStreamCall, autospec=True)
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamStreamCall
+    )
 
     await wrapped_callable(1, 2, three="four")
     multicallable.assert_called_once_with(1, 2, three="four")
     assert mock_call.wait_for_connection.call_count == 1
-
-
-@pytest.mark.asyncio
-async def test_wrap_stream_errors_type_error():
-    mock_call = mock.Mock()
-    multicallable = mock.Mock(return_value=mock_call)
-
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
-
-    with pytest.raises(TypeError):
-        await wrapped_callable()
 
 
 @pytest.mark.asyncio
@@ -151,7 +176,9 @@ async def test_wrap_stream_errors_raised():
     mock_call.wait_for_connection = mock.AsyncMock(side_effect=[grpc_error])
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamStreamCall
+    )
 
     with pytest.raises(exceptions.InvalidArgument):
         await wrapped_callable()
@@ -166,7 +193,9 @@ async def test_wrap_stream_errors_read():
     mock_call.read = mock.AsyncMock(side_effect=grpc_error)
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamStreamCall
+    )
 
     wrapped_call = await wrapped_callable(1, 2, three="four")
     multicallable.assert_called_once_with(1, 2, three="four")
@@ -189,7 +218,9 @@ async def test_wrap_stream_errors_aiter():
     mock_call.__aiter__ = mock.Mock(return_value=mocked_aiter)
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamStreamCall
+    )
     wrapped_call = await wrapped_callable()
 
     with pytest.raises(exceptions.InvalidArgument) as exc_info:
@@ -210,7 +241,9 @@ async def test_wrap_stream_errors_aiter_non_rpc_error():
     mock_call.__aiter__ = mock.Mock(return_value=mocked_aiter)
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamStreamCall
+    )
     wrapped_call = await wrapped_callable()
 
     with pytest.raises(TypeError) as exc_info:
@@ -224,7 +257,9 @@ async def test_wrap_stream_errors_aiter_called_multiple_times():
     mock_call = mock.Mock(aio.StreamStreamCall, autospec=True)
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamStreamCall
+    )
     wrapped_call = await wrapped_callable()
 
     assert wrapped_call.__aiter__() == wrapped_call.__aiter__()
@@ -239,7 +274,9 @@ async def test_wrap_stream_errors_write():
     mock_call.done_writing = mock.AsyncMock(side_effect=[None, grpc_error])
     multicallable = mock.Mock(return_value=mock_call)
 
-    wrapped_callable = grpc_helpers_async._wrap_stream_errors(multicallable)
+    wrapped_callable = grpc_helpers_async._wrap_stream_errors(
+        multicallable, grpc_helpers_async._WrappedStreamStreamCall
+    )
 
     wrapped_call = await wrapped_callable()
 
@@ -266,6 +303,28 @@ def test_wrap_errors_non_streaming(wrap_unary_errors):
     wrap_unary_errors.assert_called_once_with(callable_)
 
 
+def test_grpc_async_stream():
+    """
+    GrpcAsyncStream type should be both an AsyncIterator and a grpc.aio.Call.
+    """
+    instance = grpc_helpers_async.GrpcAsyncStream[int]()
+    assert isinstance(instance, grpc.aio.Call)
+    # should implement __aiter__ and __anext__
+    assert hasattr(instance, "__aiter__")
+    it = instance.__aiter__()
+    assert hasattr(it, "__anext__")
+
+
+def test_awaitable_grpc_call():
+    """
+    AwaitableGrpcCall type should be an Awaitable and a grpc.aio.Call.
+    """
+    instance = grpc_helpers_async.AwaitableGrpcCall()
+    assert isinstance(instance, grpc.aio.Call)
+    # should implement __await__
+    assert hasattr(instance, "__await__")
+
+
 @mock.patch("google.api_core.grpc_helpers_async._wrap_stream_errors")
 def test_wrap_errors_streaming(wrap_stream_errors):
     callable_ = mock.create_autospec(aio.UnaryStreamMultiCallable)
@@ -273,85 +332,149 @@ def test_wrap_errors_streaming(wrap_stream_errors):
     result = grpc_helpers_async.wrap_errors(callable_)
 
     assert result == wrap_stream_errors.return_value
-    wrap_stream_errors.assert_called_once_with(callable_)
+    wrap_stream_errors.assert_called_once_with(
+        callable_, grpc_helpers_async._WrappedUnaryStreamCall
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@pytest.mark.parametrize(
+    "attempt_direct_path,target,expected_target",
+    [
+        (None, "example.com:443", "example.com:443"),
+        (False, "example.com:443", "example.com:443"),
+        (True, "example.com:443", "google-c2p:///example.com"),
+        (True, "dns:///example.com", "google-c2p:///example.com"),
+        (True, "another-c2p:///example.com", "another-c2p:///example.com"),
+    ],
+)
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch(
     "google.auth.default",
     autospec=True,
-    return_value=(mock.sentinel.credentials, mock.sentinel.projet),
+    return_value=(mock.sentinel.credentials, mock.sentinel.project),
 )
 @mock.patch("grpc.aio.secure_channel")
-def test_create_channel_implicit(grpc_secure_channel, default, composite_creds_call):
-    target = "example.com:443"
+def test_create_channel_implicit(
+    grpc_secure_channel,
+    google_auth_default,
+    composite_creds_call,
+    attempt_direct_path,
+    target,
+    expected_target,
+):
     composite_creds = composite_creds_call.return_value
 
-    channel = grpc_helpers_async.create_channel(target)
+    channel = grpc_helpers_async.create_channel(
+        target, attempt_direct_path=attempt_direct_path
+    )
 
     assert channel is grpc_secure_channel.return_value
 
-    default.assert_called_once_with(scopes=None, default_scopes=None)
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    google_auth_default.assert_called_once_with(scopes=None, default_scopes=None)
+    grpc_secure_channel.assert_called_once_with(
+        expected_target, composite_creds, compression=None
+    )
 
 
+@pytest.mark.parametrize(
+    "attempt_direct_path,target, expected_target",
+    [
+        (None, "example.com:443", "example.com:443"),
+        (False, "example.com:443", "example.com:443"),
+        (True, "example.com:443", "google-c2p:///example.com"),
+        (True, "dns:///example.com", "google-c2p:///example.com"),
+        (True, "another-c2p:///example.com", "another-c2p:///example.com"),
+    ],
+)
 @mock.patch("google.auth.transport.grpc.AuthMetadataPlugin", autospec=True)
 @mock.patch(
     "google.auth.transport.requests.Request",
     autospec=True,
     return_value=mock.sentinel.Request,
 )
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch(
     "google.auth.default",
     autospec=True,
-    return_value=(mock.sentinel.credentials, mock.sentinel.projet),
+    return_value=(mock.sentinel.credentials, mock.sentinel.project),
 )
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_implicit_with_default_host(
-    grpc_secure_channel, default, composite_creds_call, request, auth_metadata_plugin
+    grpc_secure_channel,
+    google_auth_default,
+    composite_creds_call,
+    request,
+    auth_metadata_plugin,
+    attempt_direct_path,
+    target,
+    expected_target,
 ):
-    target = "example.com:443"
     default_host = "example.com"
     composite_creds = composite_creds_call.return_value
 
-    channel = grpc_helpers_async.create_channel(target, default_host=default_host)
+    channel = grpc_helpers_async.create_channel(
+        target, default_host=default_host, attempt_direct_path=attempt_direct_path
+    )
 
     assert channel is grpc_secure_channel.return_value
 
-    default.assert_called_once_with(scopes=None, default_scopes=None)
+    google_auth_default.assert_called_once_with(scopes=None, default_scopes=None)
     auth_metadata_plugin.assert_called_once_with(
         mock.sentinel.credentials, mock.sentinel.Request, default_host=default_host
     )
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        expected_target, composite_creds, compression=None
+    )
 
 
+@pytest.mark.parametrize(
+    "attempt_direct_path",
+    [
+        None,
+        False,
+    ],
+)
 @mock.patch("grpc.composite_channel_credentials")
 @mock.patch(
     "google.auth.default",
-    return_value=(mock.sentinel.credentials, mock.sentinel.projet),
+    return_value=(mock.sentinel.credentials, mock.sentinel.project),
 )
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_implicit_with_ssl_creds(
-    grpc_secure_channel, default, composite_creds_call
+    grpc_secure_channel, default, composite_creds_call, attempt_direct_path
 ):
     target = "example.com:443"
 
     ssl_creds = grpc.ssl_channel_credentials()
 
-    grpc_helpers_async.create_channel(target, ssl_credentials=ssl_creds)
+    grpc_helpers_async.create_channel(
+        target, ssl_credentials=ssl_creds, attempt_direct_path=attempt_direct_path
+    )
 
     default.assert_called_once_with(scopes=None, default_scopes=None)
     composite_creds_call.assert_called_once_with(ssl_creds, mock.ANY)
     composite_creds = composite_creds_call.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=None
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+def test_create_channel_implicit_with_ssl_creds_attempt_direct_path_true():
+    target = "example.com:443"
+    ssl_creds = grpc.ssl_channel_credentials()
+    with pytest.raises(
+        ValueError, match="Using ssl_credentials with Direct Path is not supported"
+    ):
+        grpc_helpers_async.create_channel(
+            target, ssl_credentials=ssl_creds, attempt_direct_path=True
+        )
+
+
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch(
     "google.auth.default",
     autospec=True,
-    return_value=(mock.sentinel.credentials, mock.sentinel.projet),
+    return_value=(mock.sentinel.credentials, mock.sentinel.project),
 )
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_implicit_with_scopes(
@@ -365,14 +488,16 @@ def test_create_channel_implicit_with_scopes(
     assert channel is grpc_secure_channel.return_value
 
     default.assert_called_once_with(scopes=["one", "two"], default_scopes=None)
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=None
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch(
     "google.auth.default",
     autospec=True,
-    return_value=(mock.sentinel.credentials, mock.sentinel.projet),
+    return_value=(mock.sentinel.credentials, mock.sentinel.project),
 )
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_implicit_with_default_scopes(
@@ -382,13 +507,15 @@ def test_create_channel_implicit_with_default_scopes(
     composite_creds = composite_creds_call.return_value
 
     channel = grpc_helpers_async.create_channel(
-        target, default_scopes=["three", "four"]
+        target, default_scopes=["three", "four"], compression=grpc.Compression.Gzip
     )
 
     assert channel is grpc_secure_channel.return_value
 
     default.assert_called_once_with(scopes=None, default_scopes=["three", "four"])
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=grpc.Compression.Gzip
+    )
 
 
 def test_create_channel_explicit_with_duplicate_credentials():
@@ -404,7 +531,7 @@ def test_create_channel_explicit_with_duplicate_credentials():
     assert "mutually exclusive" in str(excinfo.value)
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch("google.auth.credentials.with_scopes_if_required", autospec=True)
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_explicit(grpc_secure_channel, auth_creds, composite_creds_call):
@@ -412,17 +539,19 @@ def test_create_channel_explicit(grpc_secure_channel, auth_creds, composite_cred
     composite_creds = composite_creds_call.return_value
 
     channel = grpc_helpers_async.create_channel(
-        target, credentials=mock.sentinel.credentials
+        target, credentials=mock.sentinel.credentials, compression=grpc.Compression.Gzip
     )
 
     auth_creds.assert_called_once_with(
         mock.sentinel.credentials, scopes=None, default_scopes=None
     )
     assert channel is grpc_secure_channel.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=grpc.Compression.Gzip
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_explicit_scoped(grpc_secure_channel, composite_creds_call):
     target = "example.com:443"
@@ -433,15 +562,20 @@ def test_create_channel_explicit_scoped(grpc_secure_channel, composite_creds_cal
     credentials.requires_scopes = True
 
     channel = grpc_helpers_async.create_channel(
-        target, credentials=credentials, scopes=scopes
+        target,
+        credentials=credentials,
+        scopes=scopes,
+        compression=grpc.Compression.Gzip,
     )
 
     credentials.with_scopes.assert_called_once_with(scopes, default_scopes=None)
     assert channel is grpc_secure_channel.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=grpc.Compression.Gzip
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_explicit_default_scopes(
     grpc_secure_channel, composite_creds_call
@@ -454,17 +588,22 @@ def test_create_channel_explicit_default_scopes(
     credentials.requires_scopes = True
 
     channel = grpc_helpers_async.create_channel(
-        target, credentials=credentials, default_scopes=default_scopes
+        target,
+        credentials=credentials,
+        default_scopes=default_scopes,
+        compression=grpc.Compression.Gzip,
     )
 
     credentials.with_scopes.assert_called_once_with(
         scopes=None, default_scopes=default_scopes
     )
     assert channel is grpc_secure_channel.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=grpc.Compression.Gzip
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch("grpc.aio.secure_channel")
 def test_create_channel_explicit_with_quota_project(
     grpc_secure_channel, composite_creds_call
@@ -482,17 +621,19 @@ def test_create_channel_explicit_with_quota_project(
 
     credentials.with_quota_project.assert_called_once_with("project-foo")
     assert channel is grpc_secure_channel.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=None
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch("grpc.aio.secure_channel")
 @mock.patch(
     "google.auth.load_credentials_from_file",
     autospec=True,
     return_value=(mock.sentinel.credentials, mock.sentinel.project),
 )
-def test_create_channnel_with_credentials_file(
+def test_create_channel_with_credentials_file(
     load_credentials_from_file, grpc_secure_channel, composite_creds_call
 ):
     target = "example.com:443"
@@ -508,10 +649,12 @@ def test_create_channnel_with_credentials_file(
         credentials_file, scopes=None, default_scopes=None
     )
     assert channel is grpc_secure_channel.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=None
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch("grpc.aio.secure_channel")
 @mock.patch(
     "google.auth.load_credentials_from_file",
@@ -535,10 +678,12 @@ def test_create_channel_with_credentials_file_and_scopes(
         credentials_file, scopes=scopes, default_scopes=None
     )
     assert channel is grpc_secure_channel.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=None
+    )
 
 
-@mock.patch("grpc.composite_channel_credentials")
+@mock.patch("grpc.compute_engine_channel_credentials")
 @mock.patch("grpc.aio.secure_channel")
 @mock.patch(
     "google.auth.load_credentials_from_file",
@@ -562,14 +707,13 @@ def test_create_channel_with_credentials_file_and_default_scopes(
         credentials_file, scopes=None, default_scopes=default_scopes
     )
     assert channel is grpc_secure_channel.return_value
-    grpc_secure_channel.assert_called_once_with(target, composite_creds)
+    grpc_secure_channel.assert_called_once_with(
+        target, composite_creds, compression=None
+    )
 
 
-@pytest.mark.skipif(
-    grpc_helpers_async.HAS_GRPC_GCP, reason="grpc_gcp module not available"
-)
 @mock.patch("grpc.aio.secure_channel")
-def test_create_channel_without_grpc_gcp(grpc_secure_channel):
+def test_create_channel(grpc_secure_channel):
     target = "example.com:443"
     scopes = ["test_scope"]
 

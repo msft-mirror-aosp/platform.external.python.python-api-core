@@ -16,6 +16,7 @@
 
 import synthtool as s
 from synthtool import gcp
+from synthtool.languages import python
 
 common = gcp.CommonTemplates()
 
@@ -28,6 +29,9 @@ excludes = [
     ".flake8",  # flake8-import-order, layout
     ".coveragerc",  # layout
     "CONTRIBUTING.rst",  # no systests
+    ".github/workflows/unittest.yml",  # exclude unittest gh action
+    ".github/workflows/lint.yml",  # exclude lint gh action
+    "README.rst",
 ]
 templated_files = common.py_library(microgenerator=True, cov_level=100)
 s.move(templated_files, excludes=excludes)
@@ -43,5 +47,7 @@ s.replace(
 .pytype
 """,
 )
+
+python.configure_previous_major_version_branches()
 
 s.shell.run(["nox", "-s", "blacken"], hide_output=False)
