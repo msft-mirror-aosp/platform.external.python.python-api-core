@@ -28,14 +28,19 @@ from google.auth.transport.requests import AuthorizedSession  # type: ignore
 from google.longrunning import operations_pb2  # type: ignore
 from google.protobuf import empty_pb2  # type: ignore
 from google.protobuf import json_format  # type: ignore
+import google.protobuf
+
+import grpc
 from .base import DEFAULT_CLIENT_INFO as BASE_DEFAULT_CLIENT_INFO, OperationsTransport
+
+PROTOBUF_VERSION = google.protobuf.__version__
 
 OptionalRetry = Union[retries.Retry, object]
 
 DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
     gapic_version=BASE_DEFAULT_CLIENT_INFO.gapic_version,
     grpc_version=None,
-    rest_version=requests_version,
+    rest_version=f"requests@{requests_version}",
 )
 
 
@@ -64,7 +69,7 @@ class OperationsRestTransport(OperationsTransport):
         self,
         *,
         host: str = "longrunning.googleapis.com",
-        credentials: ga_credentials.Credentials = None,
+        credentials: Optional[ga_credentials.Credentials] = None,
         credentials_file: Optional[str] = None,
         scopes: Optional[Sequence[str]] = None,
         client_cert_source_for_mtls: Optional[Callable[[], Tuple[bytes, bytes]]] = None,
@@ -73,6 +78,7 @@ class OperationsRestTransport(OperationsTransport):
         always_use_jwt_access: Optional[bool] = False,
         url_scheme: str = "https",
         http_options: Optional[Dict] = None,
+        path_prefix: str = "v1",
     ) -> None:
         """Instantiate the transport.
 
@@ -88,6 +94,18 @@ class OperationsRestTransport(OperationsTransport):
             credentials_file (Optional[str]): A file with credentials that can
                 be loaded with :func:`google.auth.load_credentials_from_file`.
                 This argument is ignored if ``channel`` is provided.
+
+                .. warning::
+                    Important: If you accept a credential configuration (credential JSON/File/Stream)
+                    from an external source for authentication to Google Cloud Platform, you must
+                    validate it before providing it to any Google API or client library. Providing an
+                    unvalidated credential configuration to Google APIs or libraries can compromise
+                    the security of your systems and data. For more information, refer to
+                    `Validate credential configurations from external sources`_.
+
+                .. _Validate credential configurations from external sources:
+
+                https://cloud.google.com/docs/authentication/external/externally-sourced-credentials
             scopes (Optional(Sequence[str])): A list of scopes. This argument is
                 ignored if ``channel`` is provided.
             client_cert_source_for_mtls (Callable[[], Tuple[bytes, bytes]]): Client
@@ -106,8 +124,10 @@ class OperationsRestTransport(OperationsTransport):
                 "https", but for testing or local servers,
                 "http" can be specified.
             http_options: a dictionary of http_options for transcoding, to override
-                the defaults from operatons.proto.  Each method has an entry
+                the defaults from operations.proto.  Each method has an entry
                 with the corresponding http rules as value.
+            path_prefix: path prefix (usually represents API version). Set to
+                "v1" by default.
 
         """
         # Run the base constructor
@@ -125,15 +145,20 @@ class OperationsRestTransport(OperationsTransport):
         )
         if client_cert_source_for_mtls:
             self._session.configure_mtls_channel(client_cert_source_for_mtls)
+        # TODO(https://github.com/googleapis/python-api-core/issues/720): Add wrap logic directly to the property methods for callables.
         self._prep_wrapped_messages(client_info)
         self._http_options = http_options or {}
+        self._path_prefix = path_prefix
 
     def _list_operations(
         self,
         request: operations_pb2.ListOperationsRequest,
         *,
+        # TODO(https://github.com/googleapis/python-api-core/issues/723): Leverage `retry`
+        # to allow configuring retryable error codes.
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: Optional[float] = None,
+        compression: Optional[grpc.Compression] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operations_pb2.ListOperationsResponse:
         r"""Call the list operations method over HTTP.
@@ -157,18 +182,17 @@ class OperationsRestTransport(OperationsTransport):
         """
 
         http_options = [
-            {"method": "get", "uri": "/v1/{name=operations}"},
+            {
+                "method": "get",
+                "uri": "/{}/{{name=**}}/operations".format(self._path_prefix),
+            },
         ]
         if "google.longrunning.Operations.ListOperations" in self._http_options:
             http_options = self._http_options[
                 "google.longrunning.Operations.ListOperations"
             ]
 
-        request_kwargs = json_format.MessageToDict(
-            request,
-            preserving_proto_field_name=True,
-            including_default_value_fields=True,
-        )
+        request_kwargs = self._convert_protobuf_message_to_dict(request)
         transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
         uri = transcoded_request["uri"]
@@ -179,7 +203,6 @@ class OperationsRestTransport(OperationsTransport):
         json_format.ParseDict(transcoded_request["query_params"], query_params_request)
         query_params = json_format.MessageToDict(
             query_params_request,
-            including_default_value_fields=False,
             preserving_proto_field_name=False,
             use_integers_for_enums=False,
         )
@@ -187,8 +210,9 @@ class OperationsRestTransport(OperationsTransport):
         # Send the request
         headers = dict(metadata)
         headers["Content-Type"] = "application/json"
+        # TODO(https://github.com/googleapis/python-api-core/issues/721): Update incorrect use of `uri`` variable name.
         response = getattr(self._session, method)(
-            "https://{host}{uri}".format(host=self._host, uri=uri),
+            "{host}{uri}".format(host=self._host, uri=uri),
             timeout=timeout,
             headers=headers,
             params=rest_helpers.flatten_query_params(query_params),
@@ -208,8 +232,11 @@ class OperationsRestTransport(OperationsTransport):
         self,
         request: operations_pb2.GetOperationRequest,
         *,
+        # TODO(https://github.com/googleapis/python-api-core/issues/723): Leverage `retry`
+        # to allow configuring retryable error codes.
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: Optional[float] = None,
+        compression: Optional[grpc.Compression] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operations_pb2.Operation:
         r"""Call the get operation method over HTTP.
@@ -228,24 +255,23 @@ class OperationsRestTransport(OperationsTransport):
         Returns:
             ~.operations_pb2.Operation:
                 This resource represents a long-
-                unning operation that is the result of a
+                running operation that is the result of a
                 network API call.
 
         """
 
         http_options = [
-            {"method": "get", "uri": "/v1/{name=operations/**}"},
+            {
+                "method": "get",
+                "uri": "/{}/{{name=**/operations/*}}".format(self._path_prefix),
+            },
         ]
         if "google.longrunning.Operations.GetOperation" in self._http_options:
             http_options = self._http_options[
                 "google.longrunning.Operations.GetOperation"
             ]
 
-        request_kwargs = json_format.MessageToDict(
-            request,
-            preserving_proto_field_name=True,
-            including_default_value_fields=True,
-        )
+        request_kwargs = self._convert_protobuf_message_to_dict(request)
         transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
         uri = transcoded_request["uri"]
@@ -256,7 +282,6 @@ class OperationsRestTransport(OperationsTransport):
         json_format.ParseDict(transcoded_request["query_params"], query_params_request)
         query_params = json_format.MessageToDict(
             query_params_request,
-            including_default_value_fields=False,
             preserving_proto_field_name=False,
             use_integers_for_enums=False,
         )
@@ -264,8 +289,9 @@ class OperationsRestTransport(OperationsTransport):
         # Send the request
         headers = dict(metadata)
         headers["Content-Type"] = "application/json"
+        # TODO(https://github.com/googleapis/python-api-core/issues/721): Update incorrect use of `uri`` variable name.
         response = getattr(self._session, method)(
-            "https://{host}{uri}".format(host=self._host, uri=uri),
+            "{host}{uri}".format(host=self._host, uri=uri),
             timeout=timeout,
             headers=headers,
             params=rest_helpers.flatten_query_params(query_params),
@@ -285,8 +311,11 @@ class OperationsRestTransport(OperationsTransport):
         self,
         request: operations_pb2.DeleteOperationRequest,
         *,
+        # TODO(https://github.com/googleapis/python-api-core/issues/723): Leverage `retry`
+        # to allow configuring retryable error codes.
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: Optional[float] = None,
+        compression: Optional[grpc.Compression] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> empty_pb2.Empty:
         r"""Call the delete operation method over HTTP.
@@ -304,18 +333,17 @@ class OperationsRestTransport(OperationsTransport):
         """
 
         http_options = [
-            {"method": "delete", "uri": "/v1/{name=operations/**}"},
+            {
+                "method": "delete",
+                "uri": "/{}/{{name=**/operations/*}}".format(self._path_prefix),
+            },
         ]
         if "google.longrunning.Operations.DeleteOperation" in self._http_options:
             http_options = self._http_options[
                 "google.longrunning.Operations.DeleteOperation"
             ]
 
-        request_kwargs = json_format.MessageToDict(
-            request,
-            preserving_proto_field_name=True,
-            including_default_value_fields=True,
-        )
+        request_kwargs = self._convert_protobuf_message_to_dict(request)
         transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
         uri = transcoded_request["uri"]
@@ -326,7 +354,6 @@ class OperationsRestTransport(OperationsTransport):
         json_format.ParseDict(transcoded_request["query_params"], query_params_request)
         query_params = json_format.MessageToDict(
             query_params_request,
-            including_default_value_fields=False,
             preserving_proto_field_name=False,
             use_integers_for_enums=False,
         )
@@ -334,8 +361,9 @@ class OperationsRestTransport(OperationsTransport):
         # Send the request
         headers = dict(metadata)
         headers["Content-Type"] = "application/json"
+        # TODO(https://github.com/googleapis/python-api-core/issues/721): Update incorrect use of `uri`` variable name.
         response = getattr(self._session, method)(
-            "https://{host}{uri}".format(host=self._host, uri=uri),
+            "{host}{uri}".format(host=self._host, uri=uri),
             timeout=timeout,
             headers=headers,
             params=rest_helpers.flatten_query_params(query_params),
@@ -352,8 +380,11 @@ class OperationsRestTransport(OperationsTransport):
         self,
         request: operations_pb2.CancelOperationRequest,
         *,
+        # TODO(https://github.com/googleapis/python-api-core/issues/723): Leverage `retry`
+        # to allow configuring retryable error codes.
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: Optional[float] = None,
+        compression: Optional[grpc.Compression] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> empty_pb2.Empty:
         r"""Call the cancel operation method over HTTP.
@@ -371,18 +402,18 @@ class OperationsRestTransport(OperationsTransport):
         """
 
         http_options = [
-            {"method": "post", "uri": "/v1/{name=operations/**}:cancel", "body": "*"},
+            {
+                "method": "post",
+                "uri": "/{}/{{name=**/operations/*}}:cancel".format(self._path_prefix),
+                "body": "*",
+            },
         ]
         if "google.longrunning.Operations.CancelOperation" in self._http_options:
             http_options = self._http_options[
                 "google.longrunning.Operations.CancelOperation"
             ]
 
-        request_kwargs = json_format.MessageToDict(
-            request,
-            preserving_proto_field_name=True,
-            including_default_value_fields=True,
-        )
+        request_kwargs = self._convert_protobuf_message_to_dict(request)
         transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
         # Jsonify the request body
@@ -390,7 +421,6 @@ class OperationsRestTransport(OperationsTransport):
         json_format.ParseDict(transcoded_request["body"], body_request)
         body = json_format.MessageToDict(
             body_request,
-            including_default_value_fields=False,
             preserving_proto_field_name=False,
             use_integers_for_enums=False,
         )
@@ -402,7 +432,6 @@ class OperationsRestTransport(OperationsTransport):
         json_format.ParseDict(transcoded_request["query_params"], query_params_request)
         query_params = json_format.MessageToDict(
             query_params_request,
-            including_default_value_fields=False,
             preserving_proto_field_name=False,
             use_integers_for_enums=False,
         )
@@ -410,8 +439,9 @@ class OperationsRestTransport(OperationsTransport):
         # Send the request
         headers = dict(metadata)
         headers["Content-Type"] = "application/json"
+        # TODO(https://github.com/googleapis/python-api-core/issues/721): Update incorrect use of `uri`` variable name.
         response = getattr(self._session, method)(
-            "https://{host}{uri}".format(host=self._host, uri=uri),
+            "{host}{uri}".format(host=self._host, uri=uri),
             timeout=timeout,
             headers=headers,
             params=rest_helpers.flatten_query_params(query_params),

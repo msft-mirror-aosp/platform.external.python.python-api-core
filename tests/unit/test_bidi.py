@@ -17,12 +17,17 @@ import logging
 import queue
 import threading
 
-import mock
+try:
+    from unittest import mock
+    from unittest.mock import AsyncMock  # pragma: NO COVER  # noqa: F401
+except ImportError:  # pragma: NO COVER
+    import mock  # type: ignore
+
 import pytest
 
 try:
     import grpc
-except ImportError:
+except ImportError:  # pragma: NO COVER
     pytest.skip("No GRPC", allow_module_level=True)
 
 from google.api_core import bidi
@@ -291,6 +296,9 @@ class TestBidiRpc(object):
         # ensure the request queue was signaled to stop.
         assert bidi_rpc.pending_requests == 1
         assert bidi_rpc._request_queue.get() is None
+        # ensure request and callbacks are cleaned up
+        assert bidi_rpc._initial_request is None
+        assert not bidi_rpc._callbacks
 
     def test_close_no_rpc(self):
         bidi_rpc = bidi.BidiRpc(None)
@@ -618,6 +626,8 @@ class TestResumableBidiRpc(object):
         assert bidi_rpc.pending_requests == 1
         assert bidi_rpc._request_queue.get() is None
         assert bidi_rpc._finalized
+        assert bidi_rpc._initial_request is None
+        assert not bidi_rpc._callbacks
 
     def test_reopen_failure_on_rpc_restart(self):
         error1 = ValueError("1")
@@ -772,6 +782,7 @@ class TestBackgroundConsumer(object):
         consumer.stop()
 
         assert consumer.is_active is False
+        assert consumer._on_response is None
 
     def test_wake_on_error(self):
         should_continue = threading.Event()
@@ -803,6 +814,21 @@ class TestBackgroundConsumer(object):
         # It may take a few cycles for the thread to exit.
         while consumer.is_active:
             pass
+
+    def test_rpc_callback_fires_when_consumer_start_fails(self):
+        expected_exception = exceptions.InvalidArgument(
+            "test", response=grpc.StatusCode.INVALID_ARGUMENT
+        )
+        callback = mock.Mock(spec=["__call__"])
+
+        rpc, _ = make_rpc()
+        bidi_rpc = bidi.BidiRpc(rpc)
+        bidi_rpc.add_done_callback(callback)
+        bidi_rpc._start_rpc.side_effect = expected_exception
+
+        consumer = bidi.BackgroundConsumer(bidi_rpc, on_response=None)
+        consumer.start()
+        assert callback.call_args.args[0] == grpc.StatusCode.INVALID_ARGUMENT
 
     def test_consumer_expected_error(self, caplog):
         caplog.set_level(logging.DEBUG)
@@ -864,6 +890,7 @@ class TestBackgroundConsumer(object):
 
         consumer.stop()
         assert consumer.is_active is False
+        assert consumer._on_response is None
 
         # calling stop twice should not result in an error.
         consumer.stop()

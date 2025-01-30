@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-
 import pytest
+import re
 
 from google.api import http_pb2
 from google.api_core import protobuf_helpers
@@ -67,7 +66,12 @@ def test_from_any_pb_failure():
     in_message = any_pb2.Any()
     in_message.Pack(date_pb2.Date(year=1990))
 
-    with pytest.raises(TypeError):
+    with pytest.raises(
+        TypeError,
+        match=re.escape(
+            "Could not convert `google.type.Date` with underlying type `google.protobuf.any_pb2.Any` to `google.type.TimeOfDay`"
+        ),
+    ):
         protobuf_helpers.from_any_pb(timeofday_pb2.TimeOfDay, in_message)
 
 
@@ -476,11 +480,6 @@ def test_field_mask_different_level_diffs():
     ]
 
 
-@pytest.mark.skipif(
-    sys.version_info.major == 2,
-    reason="Field names with trailing underscores can only be created"
-    "through proto-plus, which is Python 3 only.",
-)
 def test_field_mask_ignore_trailing_underscore():
     import proto
 
@@ -496,11 +495,6 @@ def test_field_mask_ignore_trailing_underscore():
     ]
 
 
-@pytest.mark.skipif(
-    sys.version_info.major == 2,
-    reason="Field names with trailing underscores can only be created"
-    "through proto-plus, which is Python 3 only.",
-)
 def test_field_mask_ignore_trailing_underscore_with_nesting():
     import proto
 
