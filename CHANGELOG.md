@@ -4,6 +4,369 @@
 
 [1]: https://pypi.org/project/google-api-core/#history
 
+## [2.24.1](https://github.com/googleapis/python-api-core/compare/v2.24.0...v2.24.1) (2025-01-24)
+
+
+### Bug Fixes
+
+* Memory leak in bidi classes ([#770](https://github.com/googleapis/python-api-core/issues/770)) ([c1b8afa](https://github.com/googleapis/python-api-core/commit/c1b8afa4e2abe256e70651defccdc285f104ed19))
+* Resolve the issue where rpc timeout of 0 is used when timeout expires ([#776](https://github.com/googleapis/python-api-core/issues/776)) ([a5604a5](https://github.com/googleapis/python-api-core/commit/a5604a55070c6d92618d078191bf99f4c168d5f6))
+
+
+### Documentation
+
+* Add warnings regarding consuming externally sourced credentials ([#783](https://github.com/googleapis/python-api-core/issues/783)) ([0ec1825](https://github.com/googleapis/python-api-core/commit/0ec18254b90721684679a98bcacef4615467a227))
+
+## [2.24.0](https://github.com/googleapis/python-api-core/compare/v2.23.0...v2.24.0) (2024-12-06)
+
+
+### Features
+
+* Add automatic logging config to support debug logging ([#754](https://github.com/googleapis/python-api-core/issues/754)) ([d18d9b5](https://github.com/googleapis/python-api-core/commit/d18d9b5131162b44eebcc0859a7aca1198a2ac06))
+* Update recognized logging fields ([#766](https://github.com/googleapis/python-api-core/issues/766)) ([5f80f77](https://github.com/googleapis/python-api-core/commit/5f80f778bc25d878b3187c6138077ad8c6bcd35f))
+
+## [2.23.0](https://github.com/googleapis/python-api-core/compare/v2.22.0...v2.23.0) (2024-11-11)
+
+
+### Features
+
+* Migrate to pyproject.toml ([#736](https://github.com/googleapis/python-api-core/issues/736)) ([159e9a4](https://github.com/googleapis/python-api-core/commit/159e9a49525937f18a55c38136aae32575424d55))
+
+## [2.22.0](https://github.com/googleapis/python-api-core/compare/v2.21.0...v2.22.0) (2024-10-25)
+
+
+### Features
+
+* Add support for python 3.13 ([#696](https://github.com/googleapis/python-api-core/issues/696)) ([46b3d3a](https://github.com/googleapis/python-api-core/commit/46b3d3abaa1bae28e9d788d7c3006224cd6f74d5))
+
+
+### Bug Fixes
+
+* Add type hints to ClientOptions ([#735](https://github.com/googleapis/python-api-core/issues/735)) ([b91ed19](https://github.com/googleapis/python-api-core/commit/b91ed19210148dfa49ec790c4dd5f4a7bff80954))
+* Improve `Any` decode error ([#712](https://github.com/googleapis/python-api-core/issues/712)) ([0d5ed37](https://github.com/googleapis/python-api-core/commit/0d5ed37c96f9b40bccae98e228163a88abeb1763))
+* Require proto-plus &gt;= 1.25.0 for Python 3.13 ([#740](https://github.com/googleapis/python-api-core/issues/740)) ([a26313e](https://github.com/googleapis/python-api-core/commit/a26313e1cb12e44aa498f12622edccc0c83ba0c3))
+* Switch to unittest.mock from mock ([#713](https://github.com/googleapis/python-api-core/issues/713)) ([8c53381](https://github.com/googleapis/python-api-core/commit/8c533819b7e212aa2f1d695a7ce08629f4fb2daf))
+
+## [2.21.0](https://github.com/googleapis/python-api-core/compare/v2.20.0...v2.21.0) (2024-10-07)
+
+
+### Features
+
+* Add support for asynchronous long running operations ([#724](https://github.com/googleapis/python-api-core/issues/724)) ([aaed69b](https://github.com/googleapis/python-api-core/commit/aaed69b6f1d694cd7e561e2aa03fdd8d6cfb369a))
+
+
+### Bug Fixes
+
+* Set chunk size for async stream content ([#702](https://github.com/googleapis/python-api-core/issues/702)) ([45b8a6d](https://github.com/googleapis/python-api-core/commit/45b8a6db5a5c75acdd8be896d0152f11608c7e51))
+
+## [2.20.0](https://github.com/googleapis/python-api-core/compare/v2.19.2...v2.20.0) (2024-09-18)
+
+
+### Features
+
+* Add async unsupported paramater exception ([#694](https://github.com/googleapis/python-api-core/issues/694)) ([8c137fe](https://github.com/googleapis/python-api-core/commit/8c137feb6e880fdd93d1248d9b6c10002dc3c096))
+* Add support for asynchronous rest streaming ([#686](https://github.com/googleapis/python-api-core/issues/686)) ([1b7bb6d](https://github.com/googleapis/python-api-core/commit/1b7bb6d1b721e4ee1561e8e4a347846d7fdd7c27))
+* Add support for creating exceptions from an asynchronous response ([#688](https://github.com/googleapis/python-api-core/issues/688)) ([1c4b0d0](https://github.com/googleapis/python-api-core/commit/1c4b0d079f2103a7b5562371a7bd1ada92528de3))
+
+## [2.19.2](https://github.com/googleapis/python-api-core/compare/v2.19.1...v2.19.2) (2024-08-16)
+
+
+### Bug Fixes
+
+* Fail gracefully if could not import `rpc_status` module ([#680](https://github.com/googleapis/python-api-core/issues/680)) ([7ccbf57](https://github.com/googleapis/python-api-core/commit/7ccbf5738fa236649f9a155055c71789362b5c4c))
+
+## [2.19.1](https://github.com/googleapis/python-api-core/compare/v2.19.0...v2.19.1) (2024-06-19)
+
+
+### Bug Fixes
+
+* Add support for protobuf 5.x ([#644](https://github.com/googleapis/python-api-core/issues/644)) ([fda0ca6](https://github.com/googleapis/python-api-core/commit/fda0ca6f0664ac5044671591ed62618175a7393f))
+* Ignore unknown fields in rest streaming. ([#651](https://github.com/googleapis/python-api-core/issues/651)) ([1203fb9](https://github.com/googleapis/python-api-core/commit/1203fb97d2685535f89113e944c4764c1deb595e))
+
+## [2.19.0](https://github.com/googleapis/python-api-core/compare/v2.18.0...v2.19.0) (2024-04-29)
+
+
+### Features
+
+* Add google.api_core.version_header ([#638](https://github.com/googleapis/python-api-core/issues/638)) ([a7b53e9](https://github.com/googleapis/python-api-core/commit/a7b53e9e9a7deb88baf92a2827958429e3677069))
+
+## [2.18.0](https://github.com/googleapis/python-api-core/compare/v2.17.1...v2.18.0) (2024-03-20)
+
+
+### Features
+
+* Add common logic for supporting universe domain ([#621](https://github.com/googleapis/python-api-core/issues/621)) ([94f2ca3](https://github.com/googleapis/python-api-core/commit/94f2ca3b4d094e6e10154634d3463d07ebea2035))
+
+
+### Bug Fixes
+
+* Add _registered_method to grpc ChannelStub ([#614](https://github.com/googleapis/python-api-core/issues/614)) ([5eaaea8](https://github.com/googleapis/python-api-core/commit/5eaaea8a989f8bdbdb5fbc95a155a20837c87f42))
+* **deps:** Require proto-plus &gt;= 1.22.3 ([#626](https://github.com/googleapis/python-api-core/issues/626)) ([4fed37c](https://github.com/googleapis/python-api-core/commit/4fed37cbc32122f156e38250b5fa8b2b08a787a1))
+
+## [2.17.1](https://github.com/googleapis/python-api-core/compare/v2.17.0...v2.17.1) (2024-02-13)
+
+
+### Bug Fixes
+
+* Resolve issue handling protobuf responses in rest streaming ([#604](https://github.com/googleapis/python-api-core/issues/604)) ([bcebc92](https://github.com/googleapis/python-api-core/commit/bcebc92eca69dae81c5e546d526c92b164a6b3b4))
+
+## [2.17.0](https://github.com/googleapis/python-api-core/compare/v2.16.2...v2.17.0) (2024-02-06)
+
+
+### Features
+
+* Add attempt_direct_path argument to create_channel ([#583](https://github.com/googleapis/python-api-core/issues/583)) ([94726e7](https://github.com/googleapis/python-api-core/commit/94726e739698035b00667983f854c600252abd28))
+
+
+### Bug Fixes
+
+* Retry constructors methods support None ([#592](https://github.com/googleapis/python-api-core/issues/592)) ([416203c](https://github.com/googleapis/python-api-core/commit/416203c1888934670bfeccafe5f5469f87314512))
+
+## [2.16.2](https://github.com/googleapis/python-api-core/compare/v2.16.1...v2.16.2) (2024-02-02)
+
+
+### Bug Fixes
+
+* Spelling error `a,out` -&gt; `amount` ([#596](https://github.com/googleapis/python-api-core/issues/596)) ([88688b1](https://github.com/googleapis/python-api-core/commit/88688b1625c4dab0df6124a0560f550eb322500f))
+
+## [2.16.1](https://github.com/googleapis/python-api-core/compare/v2.16.0...v2.16.1) (2024-01-30)
+
+
+### Bug Fixes
+
+* Fix broken import for google.api_core.retry_async.AsyncRetry ([#587](https://github.com/googleapis/python-api-core/issues/587)) ([ac012c0](https://github.com/googleapis/python-api-core/commit/ac012c04c69b8bbe72962f0d0d9e9536c0b4a524))
+
+## [2.16.0](https://github.com/googleapis/python-api-core/compare/v2.15.0...v2.16.0) (2024-01-29)
+
+
+### Features
+
+* Retry and retry_async support streaming rpcs ([#495](https://github.com/googleapis/python-api-core/issues/495)) ([17ff5f1](https://github.com/googleapis/python-api-core/commit/17ff5f1d83a9a6f50a0226fb0e794634bd584f17))
+
+## [2.15.0](https://github.com/googleapis/python-api-core/compare/v2.14.0...v2.15.0) (2023-12-07)
+
+
+### Features
+
+* Add support for Python 3.12 ([#557](https://github.com/googleapis/python-api-core/issues/557)) ([091b4f1](https://github.com/googleapis/python-api-core/commit/091b4f1c7fcc59c3f2a02ee44fd3c30b78423f12))
+* Add type annotations to wrapped grpc calls ([#554](https://github.com/googleapis/python-api-core/issues/554)) ([fc12b40](https://github.com/googleapis/python-api-core/commit/fc12b40bfc6e0c4bb313196e2e3a9c9374ce1c45))
+* Add universe_domain argument to ClientOptions ([3069ef4](https://github.com/googleapis/python-api-core/commit/3069ef4b9123ddb64841cbb7bbb183b53d502e0a))
+* Introduce compatibility with native namespace packages ([#561](https://github.com/googleapis/python-api-core/issues/561)) ([bd82827](https://github.com/googleapis/python-api-core/commit/bd82827108f1eeb6c05cfacf6c044b2afacc18a2))
+
+
+### Bug Fixes
+
+* Fix regression in `bidi` causing `Thread-ConsumeBidirectionalStream caught unexpected exception  and will exit` ([#562](https://github.com/googleapis/python-api-core/issues/562)) ([40c8ae0](https://github.com/googleapis/python-api-core/commit/40c8ae0cf1f797e31e106461164e22db4fb2d3d9))
+* Replace deprecated `datetime.datetime.utcnow()` ([#552](https://github.com/googleapis/python-api-core/issues/552)) ([448923a](https://github.com/googleapis/python-api-core/commit/448923acf277a70e8704c949311bf4feaef8cab6)), closes [#540](https://github.com/googleapis/python-api-core/issues/540)
+
+## [2.14.0](https://github.com/googleapis/python-api-core/compare/v2.13.1...v2.14.0) (2023-11-09)
+
+
+### Features
+
+* Support with_call for wrapped rpcs ([#550](https://github.com/googleapis/python-api-core/issues/550)) ([01a57a7](https://github.com/googleapis/python-api-core/commit/01a57a745f4c8345c9c93412c27dd416b49f5953))
+
+## [2.13.1](https://github.com/googleapis/python-api-core/compare/v2.13.0...v2.13.1) (2023-11-09)
+
+
+### Bug Fixes
+
+* Update async client to use async retry ([#544](https://github.com/googleapis/python-api-core/issues/544)) ([f21bb32](https://github.com/googleapis/python-api-core/commit/f21bb32b8e6310116a642a6e6b6dd8e44e30e656))
+
+## [2.13.0](https://github.com/googleapis/python-api-core/compare/v2.12.0...v2.13.0) (2023-11-03)
+
+
+### Features
+
+* Add caching to routing header calculation ([#526](https://github.com/googleapis/python-api-core/issues/526)) ([6251eab](https://github.com/googleapis/python-api-core/commit/6251eab3fca5f7e509cb9b6e476ce1184094b711))
+
+
+### Bug Fixes
+
+* Add warning to retry target to avoid incorrect usage ([#543](https://github.com/googleapis/python-api-core/issues/543)) ([bfb40e6](https://github.com/googleapis/python-api-core/commit/bfb40e6929ef47be7a6464d2f1e0d06595736b8d))
+* Drop usage of distutils ([#541](https://github.com/googleapis/python-api-core/issues/541)) ([4bd9e10](https://github.com/googleapis/python-api-core/commit/4bd9e10f20eea227c88e3e1496010cca6dd8a270))
+* Ensure exception is available when BackgroundConsumer open stream fails ([#357](https://github.com/googleapis/python-api-core/issues/357)) ([405272c](https://github.com/googleapis/python-api-core/commit/405272c05f8c6d20e242c6172b01f78f0fd3bf32))
+
+## [2.12.0](https://github.com/googleapis/python-api-core/compare/v2.11.1...v2.12.0) (2023-09-07)
+
+
+### Features
+
+* Add a little bit of typing to google.api_core.retry ([#453](https://github.com/googleapis/python-api-core/issues/453)) ([2477ab9](https://github.com/googleapis/python-api-core/commit/2477ab9ea5c2e863a493fb7ebebaa429a44ea096))
+* Add grpc Compression argument to channels and methods ([#451](https://github.com/googleapis/python-api-core/issues/451)) ([bdebd63](https://github.com/googleapis/python-api-core/commit/bdebd6331f9c0d3d1a8ceaf274f07d2ed75bfe92))
+
+
+### Documentation
+
+* Fix a typo in google/api_core/page_iterator.py ([#511](https://github.com/googleapis/python-api-core/issues/511)) ([c0ce73c](https://github.com/googleapis/python-api-core/commit/c0ce73c4de53ad694fe36d17408998aa1230398f))
+
+## [2.11.1](https://github.com/googleapis/python-api-core/compare/v2.11.0...v2.11.1) (2023-06-12)
+
+
+### Bug Fixes
+
+* Add actionable errors for GCE long running operations ([#498](https://github.com/googleapis/python-api-core/issues/498)) ([7dfc3a7](https://github.com/googleapis/python-api-core/commit/7dfc3a7a439243f05238a11b68a31720fde1769e))
+* Invalid `dev` version identifiers in `setup.py` ([#505](https://github.com/googleapis/python-api-core/issues/505)) ([8844edb](https://github.com/googleapis/python-api-core/commit/8844edb1e802040810918a12bc9ff89104da38d4))
+
+## [2.11.0](https://github.com/googleapis/python-api-core/compare/v2.10.2...v2.11.0) (2022-11-10)
+
+
+### Features
+
+* Add support for Python 3.11 ([#466](https://github.com/googleapis/python-api-core/issues/466)) ([ff379e3](https://github.com/googleapis/python-api-core/commit/ff379e304c353bcab734e1c4706b74b356a1e932))
+* Allow representing enums with their unqualified symbolic names in headers ([#465](https://github.com/googleapis/python-api-core/issues/465)) ([522b98e](https://github.com/googleapis/python-api-core/commit/522b98ecc1ebd1c2280d3d7c73a02f6e4fb528d4))
+
+
+### Bug Fixes
+
+* Major refactoring of Polling, Retry and Timeout logic ([#462](https://github.com/googleapis/python-api-core/issues/462)) ([434253d](https://github.com/googleapis/python-api-core/commit/434253de16d9efdf984ddb64c409706cda1d5f82))
+* Require google-auth &gt;= 2.14.1 ([#463](https://github.com/googleapis/python-api-core/issues/463)) ([7cc329f](https://github.com/googleapis/python-api-core/commit/7cc329fe1498b0a4285123448e4ea80c6a780d47))
+
+## [2.10.2](https://github.com/googleapis/python-api-core/compare/v2.10.1...v2.10.2) (2022-10-08)
+
+
+### Bug Fixes
+
+* **deps:** Allow protobuf 3.19.5 ([#459](https://github.com/googleapis/python-api-core/issues/459)) ([e949364](https://github.com/googleapis/python-api-core/commit/e949364ce3a2c4c3cdb2658054d4793aa942d999))
+
+## [2.10.1](https://github.com/googleapis/python-api-core/compare/v2.10.0...v2.10.1) (2022-09-14)
+
+
+### Bug Fixes
+
+* Improve transcoding error message ([#442](https://github.com/googleapis/python-api-core/issues/442)) ([538df80](https://github.com/googleapis/python-api-core/commit/538df80ed6d21f43b512a73853935f7a7b9bdf52))
+
+## [2.10.0](https://github.com/googleapis/python-api-core/compare/v2.9.0...v2.10.0) (2022-09-02)
+
+
+### Features
+
+* Add 'strict' to flatten_query_params to lower-case bools ([#433](https://github.com/googleapis/python-api-core/issues/433)) ([83678e9](https://github.com/googleapis/python-api-core/commit/83678e94e1081f9087b19c43f26fad4774184d66))
+
+## [2.9.0](https://github.com/googleapis/python-api-core/compare/v2.8.2...v2.9.0) (2022-09-01)
+
+
+### Features
+
+* Make grpc transcode logic work in terms of protobuf python objects ([#428](https://github.com/googleapis/python-api-core/issues/428)) ([c3ad8ea](https://github.com/googleapis/python-api-core/commit/c3ad8ea67447e3d8a1154d7a9221e116f60d425a))
+
+
+### Bug Fixes
+
+* Require python 3.7+ ([#410](https://github.com/googleapis/python-api-core/issues/410)) ([7ddb8c0](https://github.com/googleapis/python-api-core/commit/7ddb8c00e6be7ab6905a9a802ad1c3063fbfa46c))
+* Restore support for grpcio-gcp ([#418](https://github.com/googleapis/python-api-core/issues/418)) ([8c19609](https://github.com/googleapis/python-api-core/commit/8c19609d6244930bd91fd5f40ef9b5b65584c4a5))
+
+## [2.8.2](https://github.com/googleapis/python-api-core/compare/v2.8.1...v2.8.2) (2022-06-13)
+
+
+### Bug Fixes
+
+* **deps:** allow protobuf < 5.0.0 ([#400](https://github.com/googleapis/python-api-core/issues/400)) ([8f73d2e](https://github.com/googleapis/python-api-core/commit/8f73d2ee2d3af2201f877aa7e2f7361147759dc7))
+* drop support for grpc-gcp ([#401](https://github.com/googleapis/python-api-core/issues/401)) ([5da6733](https://github.com/googleapis/python-api-core/commit/5da6733a475c436efc11b14889af73b3a0e20379))
+
+
+### Documentation
+
+* fix changelog header to consistent size ([#394](https://github.com/googleapis/python-api-core/issues/394)) ([ac266e9](https://github.com/googleapis/python-api-core/commit/ac266e935bc4e7c6dff250384407e7a60d8dba90))
+* Fix typo in the BackgroundConsumer docstring ([#395](https://github.com/googleapis/python-api-core/issues/395)) ([0eb727f](https://github.com/googleapis/python-api-core/commit/0eb727f92314db3c4383754514f75a49ba02e27b))
+
+## [2.8.1](https://github.com/googleapis/python-api-core/compare/v2.8.0...v2.8.1) (2022-05-26)
+
+
+### Bug Fixes
+
+* **deps:** require googleapis-common-protos >= 1.56.2 ([d84d66c](https://github.com/googleapis/python-api-core/commit/d84d66c2a4107f5f9a20c53e870a27fb1250ea3d))
+* **deps:** require protobuf>= 3.15.0, <4.0.0dev ([#385](https://github.com/googleapis/python-api-core/issues/385)) ([d84d66c](https://github.com/googleapis/python-api-core/commit/d84d66c2a4107f5f9a20c53e870a27fb1250ea3d))
+
+## [2.8.0](https://github.com/googleapis/python-api-core/compare/v2.7.3...v2.8.0) (2022-05-18)
+
+
+### Features
+
+* adds support for audience in client_options ([#379](https://github.com/googleapis/python-api-core/issues/379)) ([c97c498](https://github.com/googleapis/python-api-core/commit/c97c4980125a86f384cdf12720df7bb1a2adf9d2))
+* adds support for audience in client_options. ([c97c498](https://github.com/googleapis/python-api-core/commit/c97c4980125a86f384cdf12720df7bb1a2adf9d2))
+
+## [2.7.3](https://github.com/googleapis/python-api-core/compare/v2.7.2...v2.7.3) (2022-04-29)
+
+
+### Bug Fixes
+
+* Avoid AttributeError if grpcio-status is not installed ([#370](https://github.com/googleapis/python-api-core/issues/370)) ([022add1](https://github.com/googleapis/python-api-core/commit/022add16266f9c07f0f88eea13472cc2e0bfc991))
+
+## [2.7.2](https://github.com/googleapis/python-api-core/compare/v2.7.1...v2.7.2) (2022-04-13)
+
+
+### Bug Fixes
+
+* allow grpc without grpcio-status ([#355](https://github.com/googleapis/python-api-core/issues/355)) ([112049e](https://github.com/googleapis/python-api-core/commit/112049e79f5a5b0a989d85d438a1bd29485f46f7))
+* remove dependency on pkg_resources ([#361](https://github.com/googleapis/python-api-core/issues/361)) ([523dbd0](https://github.com/googleapis/python-api-core/commit/523dbd0b10d37ffcf83fa751f0bad313f162abf1))
+
+## [2.7.1](https://github.com/googleapis/python-api-core/compare/v2.7.0...v2.7.1) (2022-03-09)
+
+
+### Bug Fixes
+
+* add more context to error message. ([#340](https://github.com/googleapis/python-api-core/issues/340)) ([0680fb4](https://github.com/googleapis/python-api-core/commit/0680fb4d3e013fe2de27e0a2ae2cd9896479e596))
+
+## [2.7.0](https://github.com/googleapis/python-api-core/compare/v2.6.1...v2.7.0) (2022-03-08)
+
+
+### Features
+
+* expose extra fields in ExtendedOperation ([#351](https://github.com/googleapis/python-api-core/issues/351)) ([9abc6f4](https://github.com/googleapis/python-api-core/commit/9abc6f48f23c87b9771dca3c96b4f6af39620a50))
+
+## [2.6.1](https://github.com/googleapis/python-api-core/compare/v2.6.0...v2.6.1) (2022-03-05)
+
+
+### Bug Fixes
+
+* Remove py2 tag from wheel ([#343](https://github.com/googleapis/python-api-core/issues/343)) ([7e21e9e](https://github.com/googleapis/python-api-core/commit/7e21e9e34892472a34f9b44175fa761f0e3fd9ed))
+
+## [2.6.0](https://github.com/googleapis/python-api-core/compare/v2.5.0...v2.6.0) (2022-03-03)
+
+
+### Features
+
+* initial support for Extended Operations ([#344](https://github.com/googleapis/python-api-core/issues/344)) ([021bb7d](https://github.com/googleapis/python-api-core/commit/021bb7d5bf0a1d8ac58dbf0c738fac309135ba7d))
+
+## [2.5.0](https://github.com/googleapis/python-api-core/compare/v2.4.0...v2.5.0) (2022-02-02)
+
+
+### Features
+
+* add api_key to client options ([#248](https://github.com/googleapis/python-api-core/issues/248)) ([5e5ad37](https://github.com/googleapis/python-api-core/commit/5e5ad37b8161109d65b0fab43636f7424e570fa3))
+
+
+### Bug Fixes
+
+* **deps:** remove setuptools from dependencies ([#339](https://github.com/googleapis/python-api-core/issues/339)) ([c782f29](https://github.com/googleapis/python-api-core/commit/c782f294b50b078f01959627fb82aa4c5efec333))
+
+
+### Documentation
+
+* fix typo in library name ([#332](https://github.com/googleapis/python-api-core/issues/332)) ([f267111](https://github.com/googleapis/python-api-core/commit/f267111823545a6c67ef5f10b85cd8c2fab8a612))
+
+## [2.4.0](https://www.github.com/googleapis/python-api-core/compare/v2.3.2...v2.4.0) (2022-01-11)
+
+
+### Features
+
+* add support for 'error_info' ([#315](https://www.github.com/googleapis/python-api-core/issues/315)) ([cc46aa6](https://www.github.com/googleapis/python-api-core/commit/cc46aa68ec184871330d16a6c767f57a4f0eb633))
+* iterator for processing JSON responses in REST streaming. ([#317](https://www.github.com/googleapis/python-api-core/issues/317)) ([f9f2696](https://www.github.com/googleapis/python-api-core/commit/f9f26969842b456ea372bed941d712b7a9ab7239))
+
+## [2.3.2](https://www.github.com/googleapis/python-api-core/compare/v2.3.1...v2.3.2) (2021-12-16)
+
+
+### Bug Fixes
+
+* address broken wheels in version 2.3.1
+
+## [2.3.1](https://www.github.com/googleapis/python-api-core/compare/v2.3.0...v2.3.1) (2021-12-15)
+
+
+### Bug Fixes
+* exclude function target from retry deadline exceeded exception message ([#318](https://www.github.com/googleapis/python-api-core/issues/318)) ([34ebdcc](https://www.github.com/googleapis/python-api-core/commit/34ebdcc251d4f3d7d496e8e0b78847645a06650b))
+
 ## [2.3.0](https://www.github.com/googleapis/python-api-core/compare/v2.2.2...v2.3.0) (2021-11-25)
 
 
@@ -16,14 +379,14 @@
 
 * handle bare 'grpc.Call' in 'from_grpc_error' ([#298](https://www.github.com/googleapis/python-api-core/issues/298)) ([060b339](https://www.github.com/googleapis/python-api-core/commit/060b339e3af296dd1772bfc1b4a0d2b4264cae1f))
 
-### [2.2.2](https://www.github.com/googleapis/python-api-core/compare/v2.2.1...v2.2.2) (2021-11-02)
+## [2.2.2](https://www.github.com/googleapis/python-api-core/compare/v2.2.1...v2.2.2) (2021-11-02)
 
 
 ### Bug Fixes
 
 * make 'gapic_v1.method.DEFAULT' a typed object ([#292](https://www.github.com/googleapis/python-api-core/issues/292)) ([ffc51f0](https://www.github.com/googleapis/python-api-core/commit/ffc51f03c7ce5d9f009ba859b8df385d52925578))
 
-### [2.2.1](https://www.github.com/googleapis/python-api-core/compare/v2.2.0...v2.2.1) (2021-10-26)
+## [2.2.1](https://www.github.com/googleapis/python-api-core/compare/v2.2.0...v2.2.1) (2021-10-26)
 
 
 ### Bug Fixes
@@ -37,7 +400,7 @@
 
 * add 'GoogleAPICallError.error_details' property ([#286](https://www.github.com/googleapis/python-api-core/issues/286)) ([ef6f0fc](https://www.github.com/googleapis/python-api-core/commit/ef6f0fcfdfe771172056e35e3c990998b3b00416))
 
-### [2.1.1](https://www.github.com/googleapis/python-api-core/compare/v2.1.0...v2.1.1) (2021-10-13)
+## [2.1.1](https://www.github.com/googleapis/python-api-core/compare/v2.1.0...v2.1.1) (2021-10-13)
 
 
 ### Bug Fixes
@@ -53,7 +416,7 @@
 * Add helper function to format query_params for rest transport. ([#275](https://www.github.com/googleapis/python-api-core/issues/275)) ([1c5eb4d](https://www.github.com/googleapis/python-api-core/commit/1c5eb4df93d78e791082d9282330ebf0faacd222))
 * add support for Python 3.10 ([#284](https://www.github.com/googleapis/python-api-core/issues/284)) ([a422a5d](https://www.github.com/googleapis/python-api-core/commit/a422a5d72cb6f363d57e7a4effe421ba8e049cde))
 
-### [2.0.1](https://www.github.com/googleapis/python-api-core/compare/v2.0.0...v2.0.1) (2021-08-31)
+## [2.0.1](https://www.github.com/googleapis/python-api-core/compare/v2.0.0...v2.0.1) (2021-08-31)
 
 
 ### Bug Fixes
@@ -82,7 +445,7 @@
 
 * strip trailing _ from field mask paths ([#228](https://www.github.com/googleapis/python-api-core/issues/228)) ([ff6ef1b](https://www.github.com/googleapis/python-api-core/commit/ff6ef1bd07fa68307b7c82c910416d770e7b3416))
 
-### [1.31.1](https://www.github.com/googleapis/python-api-core/compare/v1.31.0...v1.31.1) (2021-07-26)
+## [1.31.1](https://www.github.com/googleapis/python-api-core/compare/v1.31.0...v1.31.1) (2021-07-26)
 
 
 ### Bug Fixes
@@ -145,7 +508,7 @@
 * Add support for `rest/` token in `x-goog-api-client` header ([#189](https://www.github.com/googleapis/python-api-core/issues/189)) ([15aca6b](https://www.github.com/googleapis/python-api-core/commit/15aca6b288b2ec5ce0251e442e1dfa7f52e1b124))
 * retry google.auth TransportError and requests ConnectionError ([#178](https://www.github.com/googleapis/python-api-core/issues/178)) ([6ae04a8](https://www.github.com/googleapis/python-api-core/commit/6ae04a8d134fffe13f06081e15f9723c1b2ea334))
 
-### [1.26.3](https://www.github.com/googleapis/python-api-core/compare/v1.26.2...v1.26.3) (2021-03-25)
+## [1.26.3](https://www.github.com/googleapis/python-api-core/compare/v1.26.2...v1.26.3) (2021-03-25)
 
 
 ### Bug Fixes
@@ -157,14 +520,14 @@
 
 * update python contributing guide ([#147](https://www.github.com/googleapis/python-api-core/issues/147)) ([1d76b57](https://www.github.com/googleapis/python-api-core/commit/1d76b57d1f218f7885f85dc7c052bad1ad3857ac))
 
-### [1.26.2](https://www.github.com/googleapis/python-api-core/compare/v1.26.1...v1.26.2) (2021-03-23)
+## [1.26.2](https://www.github.com/googleapis/python-api-core/compare/v1.26.1...v1.26.2) (2021-03-23)
 
 
 ### Bug Fixes
 
 * save empty IAM policy bindings ([#155](https://www.github.com/googleapis/python-api-core/issues/155)) ([536c2ca](https://www.github.com/googleapis/python-api-core/commit/536c2cad814b8fa8cd346a3d7bd5f6b9889c4a6f))
 
-### [1.26.1](https://www.github.com/googleapis/python-api-core/compare/v1.26.0...v1.26.1) (2021-02-12)
+## [1.26.1](https://www.github.com/googleapis/python-api-core/compare/v1.26.0...v1.26.1) (2021-02-12)
 
 
 ### Bug Fixes
@@ -178,7 +541,7 @@
 
 * allow default_host and default_scopes to be passed to create_channel ([#134](https://www.github.com/googleapis/python-api-core/issues/134)) ([94c76e0](https://www.github.com/googleapis/python-api-core/commit/94c76e0873e5b2f42331d5b1ad286c1e63b61395))
 
-### [1.25.1](https://www.github.com/googleapis/python-api-core/compare/v1.25.0...v1.25.1) (2021-01-25)
+## [1.25.1](https://www.github.com/googleapis/python-api-core/compare/v1.25.0...v1.25.1) (2021-01-25)
 
 
 ### Bug Fixes
@@ -202,7 +565,7 @@
 
 * **python:** document adding Python 3.9 support, dropping 3.5 support ([#120](https://www.github.com/googleapis/python-api-core/issues/120)) ([b51b7f5](https://www.github.com/googleapis/python-api-core/commit/b51b7f587042fe9340371c1b5c8e9adf8001c43a)), closes [#787](https://www.github.com/googleapis/python-api-core/issues/787)
 
-### [1.24.1](https://www.github.com/googleapis/python-api-core/compare/v1.24.0...v1.24.1) (2020-12-16)
+## [1.24.1](https://www.github.com/googleapis/python-api-core/compare/v1.24.0...v1.24.1) (2020-12-16)
 
 
 ### Bug Fixes
@@ -235,28 +598,28 @@
 * harden install to use full paths, and windows separators on windows ([#88](https://www.github.com/googleapis/python-api-core/issues/88)) ([db8e636](https://www.github.com/googleapis/python-api-core/commit/db8e636f545a8872f959e3f403cfec30ffed6c34))
 * update out-of-date comment in exceptions.py ([#93](https://www.github.com/googleapis/python-api-core/issues/93)) ([70ebe42](https://www.github.com/googleapis/python-api-core/commit/70ebe42601b3d088b3421233ef7d8245229b7265))
 
-### [1.22.4](https://www.github.com/googleapis/python-api-core/compare/v1.22.3...v1.22.4) (2020-10-05)
+## [1.22.4](https://www.github.com/googleapis/python-api-core/compare/v1.22.3...v1.22.4) (2020-10-05)
 
 
 ### Bug Fixes
 
 * use version.py instead of pkg_resources.get_distribution ([#80](https://www.github.com/googleapis/python-api-core/issues/80)) ([d480d97](https://www.github.com/googleapis/python-api-core/commit/d480d97e41cd6705325b3b649360553a83c23f47))
 
-### [1.22.3](https://www.github.com/googleapis/python-api-core/compare/v1.22.2...v1.22.3) (2020-10-02)
+## [1.22.3](https://www.github.com/googleapis/python-api-core/compare/v1.22.2...v1.22.3) (2020-10-02)
 
 
 ### Bug Fixes
 
 * **deps:** require six >= 1.13.0 ([#78](https://www.github.com/googleapis/python-api-core/issues/78)) ([a7a8b98](https://www.github.com/googleapis/python-api-core/commit/a7a8b98602a3eb277fdc607ac69f3bcb147f3351)), closes [/github.com/benjaminp/six/blob/c0be8815d13df45b6ae471c4c436cce8c192245d/CHANGES#L30-L31](https://www.github.com/googleapis//github.com/benjaminp/six/blob/c0be8815d13df45b6ae471c4c436cce8c192245d/CHANGES/issues/L30-L31)
 
-### [1.22.2](https://www.github.com/googleapis/python-api-core/compare/v1.22.1...v1.22.2) (2020-09-03)
+## [1.22.2](https://www.github.com/googleapis/python-api-core/compare/v1.22.1...v1.22.2) (2020-09-03)
 
 
 ### Bug Fixes
 
 * only add quota project id if supported ([#75](https://www.github.com/googleapis/python-api-core/issues/75)) ([8f8ee78](https://www.github.com/googleapis/python-api-core/commit/8f8ee7879e4f834f3c676e535ffc41b5b9b2de62))
 
-### [1.22.1](https://www.github.com/googleapis/python-api-core/compare/v1.22.0...v1.22.1) (2020-08-12)
+## [1.22.1](https://www.github.com/googleapis/python-api-core/compare/v1.22.0...v1.22.1) (2020-08-12)
 
 
 ### Documentation
@@ -287,7 +650,7 @@
 
 * allow credentials files to be passed for channel creation ([#50](https://www.github.com/googleapis/python-api-core/issues/50)) ([ded92d0](https://www.github.com/googleapis/python-api-core/commit/ded92d0acdcde4295d0e5df05fda0d83783a3991))
 
-### [1.20.1](https://www.github.com/googleapis/python-api-core/compare/v1.20.0...v1.20.1) (2020-06-16)
+## [1.20.1](https://www.github.com/googleapis/python-api-core/compare/v1.20.0...v1.20.1) (2020-06-16)
 
 
 ### Bug Fixes
@@ -301,7 +664,7 @@
 
 * allow disabling response stream pre-fetch ([#30](https://www.github.com/googleapis/python-api-core/issues/30)) ([74e0b0f](https://www.github.com/googleapis/python-api-core/commit/74e0b0f8387207933c120af15b2bb5d175dd8f84)), closes [#25](https://www.github.com/googleapis/python-api-core/issues/25)
 
-### [1.19.1](https://www.github.com/googleapis/python-api-core/compare/v1.19.0...v1.19.1) (2020-06-06)
+## [1.19.1](https://www.github.com/googleapis/python-api-core/compare/v1.19.0...v1.19.1) (2020-06-06)
 
 
 ### Bug Fixes

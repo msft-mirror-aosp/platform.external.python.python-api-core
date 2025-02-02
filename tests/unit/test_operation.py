@@ -13,12 +13,13 @@
 # limitations under the License.
 
 
-import mock
+from unittest import mock
+
 import pytest
 
 try:
     import grpc  # noqa: F401
-except ImportError:
+except ImportError:  # pragma: NO COVER
     pytest.skip("No GRPC", allow_module_level=True)
 
 from google.api_core import exceptions
