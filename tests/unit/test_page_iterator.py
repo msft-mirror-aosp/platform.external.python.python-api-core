@@ -14,8 +14,8 @@
 
 import math
 import types
+from unittest import mock
 
-import mock
 import pytest
 
 from google.api_core import page_iterator
@@ -505,7 +505,8 @@ class TestHTTPIterator(object):
                 assert list(next(items_iter)) == [
                     dict(name=str(i))
                     for i in range(
-                        ipage * page_size, min((ipage + 1) * page_size, n_results),
+                        ipage * page_size,
+                        min((ipage + 1) * page_size, n_results),
                     )
                 ]
         else:

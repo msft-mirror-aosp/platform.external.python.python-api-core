@@ -14,11 +14,15 @@
 
 import datetime
 
-import mock
+try:
+    from unittest import mock
+    from unittest.mock import AsyncMock  # pragma: NO COVER  # noqa: F401
+except ImportError:  # pragma: NO COVER
+    import mock  # type: ignore
 import pytest
 
 try:
-    from grpc import aio
+    from grpc import aio, Compression
 except ImportError:
     pytest.skip("No GRPC", allow_module_level=True)
 
@@ -93,6 +97,35 @@ async def test_wrap_method_with_custom_client_info():
 
 
 @pytest.mark.asyncio
+async def test_wrap_method_with_no_compression():
+    fake_call = grpc_helpers_async.FakeUnaryUnaryCall()
+    method = mock.Mock(spec=aio.UnaryUnaryMultiCallable, return_value=fake_call)
+
+    wrapped_method = gapic_v1.method_async.wrap_method(method)
+
+    await wrapped_method(1, 2, meep="moop", compression=None)
+
+    method.assert_called_once_with(1, 2, meep="moop", metadata=mock.ANY)
+
+
+@pytest.mark.asyncio
+async def test_wrap_method_with_custom_compression():
+    compression = Compression.Gzip
+    fake_call = grpc_helpers_async.FakeUnaryUnaryCall()
+    method = mock.Mock(spec=aio.UnaryUnaryMultiCallable, return_value=fake_call)
+
+    wrapped_method = gapic_v1.method_async.wrap_method(
+        method, default_compression=compression
+    )
+
+    await wrapped_method(1, 2, meep="moop", compression=Compression.Deflate)
+
+    method.assert_called_once_with(
+        1, 2, meep="moop", metadata=mock.ANY, compression=Compression.Deflate
+    )
+
+
+@pytest.mark.asyncio
 async def test_invoke_wrapped_method_with_metadata():
     fake_call = grpc_helpers_async.FakeUnaryUnaryCall()
     method = mock.Mock(spec=aio.UnaryUnaryMultiCallable, return_value=fake_call)
@@ -126,7 +159,7 @@ async def test_invoke_wrapped_method_with_metadata_as_none():
 
 @mock.patch("asyncio.sleep")
 @pytest.mark.asyncio
-async def test_wrap_method_with_default_retry_and_timeout(unused_sleep):
+async def test_wrap_method_with_default_retry_timeout_and_compression(unused_sleep):
     fake_call = grpc_helpers_async.FakeUnaryUnaryCall(42)
     method = mock.Mock(
         spec=aio.UnaryUnaryMultiCallable,
@@ -135,15 +168,18 @@ async def test_wrap_method_with_default_retry_and_timeout(unused_sleep):
 
     default_retry = retry_async.AsyncRetry()
     default_timeout = timeout.ConstantTimeout(60)
+    default_compression = Compression.Gzip
     wrapped_method = gapic_v1.method_async.wrap_method(
-        method, default_retry, default_timeout
+        method, default_retry, default_timeout, default_compression
     )
 
     result = await wrapped_method()
 
     assert result == 42
     assert method.call_count == 2
-    method.assert_called_with(timeout=60, metadata=mock.ANY)
+    method.assert_called_with(
+        timeout=60, compression=default_compression, metadata=mock.ANY
+    )
 
 
 @mock.patch("asyncio.sleep")
@@ -157,22 +193,27 @@ async def test_wrap_method_with_default_retry_and_timeout_using_sentinel(unused_
 
     default_retry = retry_async.AsyncRetry()
     default_timeout = timeout.ConstantTimeout(60)
+    default_compression = Compression.Gzip
     wrapped_method = gapic_v1.method_async.wrap_method(
-        method, default_retry, default_timeout
+        method, default_retry, default_timeout, default_compression
     )
 
     result = await wrapped_method(
-        retry=gapic_v1.method_async.DEFAULT, timeout=gapic_v1.method_async.DEFAULT,
+        retry=gapic_v1.method_async.DEFAULT,
+        timeout=gapic_v1.method_async.DEFAULT,
+        compression=gapic_v1.method_async.DEFAULT,
     )
 
     assert result == 42
     assert method.call_count == 2
-    method.assert_called_with(timeout=60, metadata=mock.ANY)
+    method.assert_called_with(
+        timeout=60, compression=Compression.Gzip, metadata=mock.ANY
+    )
 
 
 @mock.patch("asyncio.sleep")
 @pytest.mark.asyncio
-async def test_wrap_method_with_overriding_retry_and_timeout(unused_sleep):
+async def test_wrap_method_with_overriding_retry_timeout_and_compression(unused_sleep):
     fake_call = grpc_helpers_async.FakeUnaryUnaryCall(42)
     method = mock.Mock(
         spec=aio.UnaryUnaryMultiCallable,
@@ -181,8 +222,9 @@ async def test_wrap_method_with_overriding_retry_and_timeout(unused_sleep):
 
     default_retry = retry_async.AsyncRetry()
     default_timeout = timeout.ConstantTimeout(60)
+    default_compression = Compression.Gzip
     wrapped_method = gapic_v1.method_async.wrap_method(
-        method, default_retry, default_timeout
+        method, default_retry, default_timeout, default_compression
     )
 
     result = await wrapped_method(
@@ -190,45 +232,13 @@ async def test_wrap_method_with_overriding_retry_and_timeout(unused_sleep):
             retry_async.if_exception_type(exceptions.NotFound)
         ),
         timeout=timeout.ConstantTimeout(22),
+        compression=Compression.Deflate,
     )
 
     assert result == 42
     assert method.call_count == 2
-    method.assert_called_with(timeout=22, metadata=mock.ANY)
-
-
-@mock.patch("asyncio.sleep")
-@mock.patch(
-    "google.api_core.datetime_helpers.utcnow",
-    side_effect=_utcnow_monotonic(),
-    autospec=True,
-)
-@pytest.mark.asyncio
-async def test_wrap_method_with_overriding_retry_deadline(utcnow, unused_sleep):
-    fake_call = grpc_helpers_async.FakeUnaryUnaryCall(42)
-    method = mock.Mock(
-        spec=aio.UnaryUnaryMultiCallable,
-        side_effect=([exceptions.InternalServerError(None)] * 4) + [fake_call],
-    )
-
-    default_retry = retry_async.AsyncRetry()
-    default_timeout = timeout.ExponentialTimeout(deadline=60)
-    wrapped_method = gapic_v1.method_async.wrap_method(
-        method, default_retry, default_timeout
-    )
-
-    # Overriding only the retry's deadline should also override the timeout's
-    # deadline.
-    result = await wrapped_method(retry=default_retry.with_deadline(30))
-
-    assert result == 42
-    timeout_args = [call[1]["timeout"] for call in method.call_args_list]
-    assert timeout_args == [5.0, 10.0, 20.0, 26.0, 25.0]
-    assert utcnow.call_count == (
-        1
-        + 1  # Compute wait_for timeout in retry_async
-        + 5  # First to set the deadline.
-        + 5  # One for each min(timeout, maximum, (DEADLINE - NOW).seconds)
+    method.assert_called_with(
+        timeout=22, compression=Compression.Deflate, metadata=mock.ANY
     )
 
 
@@ -246,3 +256,14 @@ async def test_wrap_method_with_overriding_timeout_as_a_number():
 
     assert result == 42
     method.assert_called_once_with(timeout=22, metadata=mock.ANY)
+
+
+@pytest.mark.asyncio
+async def test_wrap_method_without_wrap_errors():
+    fake_call = mock.AsyncMock()
+
+    wrapped_method = gapic_v1.method_async.wrap_method(fake_call, kind="rest")
+    with mock.patch("google.api_core.grpc_helpers_async.wrap_errors") as method:
+        await wrapped_method()
+
+        method.assert_not_called()

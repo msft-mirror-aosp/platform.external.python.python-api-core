@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from re import match
 import pytest
 
 from google.api_core import client_options
@@ -36,6 +37,8 @@ def test_constructor():
             "https://www.googleapis.com/auth/cloud-platform",
             "https://www.googleapis.com/auth/cloud-platform.read-only",
         ],
+        api_audience="foo2.googleapis.com",
+        universe_domain="googleapis.com",
     )
 
     assert options.api_endpoint == "foo.googleapis.com"
@@ -46,6 +49,8 @@ def test_constructor():
         "https://www.googleapis.com/auth/cloud-platform",
         "https://www.googleapis.com/auth/cloud-platform.read-only",
     ]
+    assert options.api_audience == "foo2.googleapis.com"
+    assert options.universe_domain == "googleapis.com"
 
 
 def test_constructor_with_encrypted_cert_source():
@@ -72,10 +77,42 @@ def test_constructor_with_both_cert_sources():
         )
 
 
+def test_constructor_with_api_key():
+
+    options = client_options.ClientOptions(
+        api_endpoint="foo.googleapis.com",
+        client_cert_source=get_client_cert,
+        quota_project_id="quote-proj",
+        api_key="api-key",
+        scopes=[
+            "https://www.googleapis.com/auth/cloud-platform",
+            "https://www.googleapis.com/auth/cloud-platform.read-only",
+        ],
+    )
+
+    assert options.api_endpoint == "foo.googleapis.com"
+    assert options.client_cert_source() == (b"cert", b"key")
+    assert options.quota_project_id == "quote-proj"
+    assert options.api_key == "api-key"
+    assert options.scopes == [
+        "https://www.googleapis.com/auth/cloud-platform",
+        "https://www.googleapis.com/auth/cloud-platform.read-only",
+    ]
+
+
+def test_constructor_with_both_api_key_and_credentials_file():
+    with pytest.raises(ValueError):
+        client_options.ClientOptions(
+            api_key="api-key",
+            credentials_file="path/to/credentials.json",
+        )
+
+
 def test_from_dict():
     options = client_options.from_dict(
         {
             "api_endpoint": "foo.googleapis.com",
+            "universe_domain": "googleapis.com",
             "client_cert_source": get_client_cert,
             "quota_project_id": "quote-proj",
             "credentials_file": "path/to/credentials.json",
@@ -83,10 +120,12 @@ def test_from_dict():
                 "https://www.googleapis.com/auth/cloud-platform",
                 "https://www.googleapis.com/auth/cloud-platform.read-only",
             ],
+            "api_audience": "foo2.googleapis.com",
         }
     )
 
     assert options.api_endpoint == "foo.googleapis.com"
+    assert options.universe_domain == "googleapis.com"
     assert options.client_cert_source() == (b"cert", b"key")
     assert options.quota_project_id == "quote-proj"
     assert options.credentials_file == "path/to/credentials.json"
@@ -94,6 +133,8 @@ def test_from_dict():
         "https://www.googleapis.com/auth/cloud-platform",
         "https://www.googleapis.com/auth/cloud-platform.read-only",
     ]
+    assert options.api_key is None
+    assert options.api_audience == "foo2.googleapis.com"
 
 
 def test_from_dict_bad_argument():
@@ -108,10 +149,22 @@ def test_from_dict_bad_argument():
 
 
 def test_repr():
-    options = client_options.ClientOptions(api_endpoint="foo.googleapis.com")
-
-    assert (
-        repr(options)
-        == "ClientOptions: {'api_endpoint': 'foo.googleapis.com', 'client_cert_source': None, 'client_encrypted_cert_source': None}"
-        or "ClientOptions: {'client_encrypted_cert_source': None, 'client_cert_source': None, 'api_endpoint': 'foo.googleapis.com'}"
+    expected_keys = set(
+        [
+            "api_endpoint",
+            "universe_domain",
+            "client_cert_source",
+            "client_encrypted_cert_source",
+            "quota_project_id",
+            "credentials_file",
+            "scopes",
+            "api_key",
+            "api_audience",
+        ]
     )
+    options = client_options.ClientOptions(api_endpoint="foo.googleapis.com")
+    options_repr = repr(options)
+    options_keys = vars(options).keys()
+    assert match(r"ClientOptions:", options_repr)
+    assert match(r".*'api_endpoint': 'foo.googleapis.com'.*", options_repr)
+    assert options_keys == expected_keys
