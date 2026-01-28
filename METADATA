@@ -15,6 +15,7 @@ third_party {
   identifier {
     type: "Git"
     value: "https://github.com/googleapis/python-api-core"
-    version: "v2.24.1"
+    version: "b51ca57409cd787d6f11d7f844b39a432784f8b3"
+    closest_version: "v2.24.1"
   }
 }
